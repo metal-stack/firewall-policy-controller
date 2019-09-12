@@ -1,0 +1,15 @@
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: s1
+    namespace: test-ns
+  spec:
+    loadBalancerIP: 212.37.83.1
+    type: LoadBalancer 
+    ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8063
+    - protocol: UDP
+      port: 53
+      targetPort: 8064

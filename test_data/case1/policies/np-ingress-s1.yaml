@@ -1,0 +1,22 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: np-ingress-s1
+  namespace: test-ns
+  annotations:
+    "network-policy.metal-pod.io/serviceName": s1
+spec:
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - ipBlock:
+        cidr: 192.168.0.0/16
+        except:
+          - 192.168.1.0/24
+          - 192.168.2.0/24
+    - ipBlock:
+        cidr: 10.0.0.0/16
+        except:
+          - 10.0.1.1/32
