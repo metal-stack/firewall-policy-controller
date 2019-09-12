@@ -15,11 +15,11 @@ table ip mf {
 
 		goto mf-final
 	}
-    chain mf-forward {
-        type filter hook forward priority 0;
+	chain mf-forward {
+		type filter hook forward priority 0;
 		policy drop
 
-        jump mf-ct-icmp
+		jump mf-ct-icmp
 
 		# dynamic ingress rules
 		{{- range .IngressRules }}
@@ -48,7 +48,7 @@ table ip mf {
 		ct state established,related accept comment "accept established connections"
 		ct state invalid drop comment "drop packets with invalid ct state"
 
-        # no ping floods
+		# no ping floods
 		ip protocol icmp icmp type echo-request limit rate over 10/second burst 4 packets drop comment "drop ping floods"
 
 		# ICMP & IGMP
