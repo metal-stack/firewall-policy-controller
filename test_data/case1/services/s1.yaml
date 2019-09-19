@@ -4,8 +4,11 @@
     name: s1
     namespace: test-ns
   spec:
+    type: LoadBalancer
     loadBalancerIP: 212.37.83.1
-    type: LoadBalancer 
+    loadBalancerSourceRanges:
+    - 192.168.0.0/24
+    - 192.168.2.0/24
     ports:
     - protocol: TCP
       port: 80

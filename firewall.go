@@ -5,6 +5,7 @@ import (
 	"strings"
 	"text/template"
 
+	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8s "k8s.io/client-go/kubernetes"
@@ -16,18 +17,27 @@ type MetalFirewall struct {
 	EgressRules  []string
 }
 
+type Input struct {
+	NetworkPolicyList networkingv1.NetworkPolicyList
+	ServiceList       corev1.ServiceList
+}
+
 func NewMetalFirewall(client k8s.Interface) *MetalFirewall {
 	return &MetalFirewall{
 		c: client,
 	}
 }
 
-func (f *MetalFirewall) AssembleRules(npl *networkingv1.NetworkPolicyList) error {
+func (f *MetalFirewall) AssembleRules() error {
+	npl, err := f.c.NetworkingV1().NetworkPolicies(metav1.NamespaceAll).List(metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
 	f.IngressRules = []string{}
 	f.EgressRules = []string{}
 	for _, np := range npl.Items {
-		hasIngress := false
 		hasEgress := false
+		hasIngress := false
 		for _, pt := range np.Spec.PolicyTypes {
 			switch strings.ToLower(string(pt)) {
 			case "ingress":
@@ -39,26 +49,16 @@ func (f *MetalFirewall) AssembleRules(npl *networkingv1.NetworkPolicyList) error
 				hasEgress = true
 			}
 		}
-		if hasIngress {
-			serviceName := ""
-			for k, v := range np.ObjectMeta.Annotations {
-				if k == NetworkPolicyAnnotationServiceName {
-					serviceName = v
-				}
-			}
-			if serviceName == "" {
-				continue
-			}
-			svc, err := f.c.CoreV1().Services(np.ObjectMeta.Namespace).Get(serviceName, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-			sp := NewServicePolicy(np, *svc)
-			f.IngressRules = append(f.IngressRules, sp.IngressRules()...)
-		}
 		if hasEgress {
 			f.EgressRules = append(f.EgressRules, EgressRules(np)...)
 		}
+		if hasIngress {
+			f.IngressRules = append(f.EgressRules, IngressRulesNP(np)...)
+		}
+	}
+	svcs, err := f.c.CoreV1().Services(metav1.NamespaceAll).List(metav1.ListOptions{})
+	for _, svc := range svcs.Items {
+		f.IngressRules = append(f.IngressRules, IngressRules(svc)...)
 	}
 	return nil
 }

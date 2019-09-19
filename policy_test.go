@@ -19,7 +19,6 @@ func TestPolicyEnforcementWithTestData(t *testing.T) {
 		t.Run(tc, func(t *testing.T) {
 			tcd := path.Join("test_data", tc)
 			c := testclient.NewSimpleClientset()
-			npl := &networkingv1.NetworkPolicyList{}
 			for _, i := range list(path.Join(tcd, "services"), false) {
 				var svc corev1.Service
 				mustUnmarshal(path.Join(tcd, "services", i), &svc)
@@ -28,10 +27,10 @@ func TestPolicyEnforcementWithTestData(t *testing.T) {
 			for _, i := range list(path.Join(tcd, "policies"), false) {
 				var np networkingv1.NetworkPolicy
 				mustUnmarshal(path.Join(tcd, "policies", i), &np)
-				npl.Items = append(npl.Items, np)
+				c.NetworkingV1().NetworkPolicies(np.ObjectMeta.Namespace).Create(&np)
 			}
 			fw := NewMetalFirewall(c)
-			fw.AssembleRules(npl)
+			fw.AssembleRules()
 			exp, _ := ioutil.ReadFile(path.Join(tcd, "expected.nftablev4"))
 			assert.Equal(t, string(exp), fw.render())
 		})

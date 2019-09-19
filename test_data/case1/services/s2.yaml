@@ -4,8 +4,10 @@
     name: s2
     namespace: test-ns
   spec:
+    type: LoadBalancer
     loadBalancerIP: 212.37.83.2
-    type: LoadBalancer 
+    loadBalancerSourceRanges:
+    - 212.1.1.1/32
     ports:
     - protocol: TCP
       port: 443

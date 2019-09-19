@@ -8,44 +8,64 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 )
 
-type ServicePolicy struct {
-	Service       corev1.Service
-	NetworkPolicy networkingv1.NetworkPolicy
-}
-
-func NewServicePolicy(np networkingv1.NetworkPolicy, svc corev1.Service) *ServicePolicy {
-	return &ServicePolicy{
-		NetworkPolicy: np,
-		Service:       svc,
-	}
-}
-
-func (sp *ServicePolicy) IngressRules() []string {
-	svc := sp.Service
-	np := sp.NetworkPolicy
+func IngressRulesNP(np networkingv1.NetworkPolicy) []string {
 	ingress := np.Spec.Ingress
 	if ingress == nil {
 		return nil
 	}
-	allow := []string{}
-	except := []string{}
+	if np.ObjectMeta.Namespace != "" {
+		return nil
+	}
+	rules := []string{}
 	for _, i := range ingress {
+		allow := []string{}
+		except := []string{}
 		for _, f := range i.From {
 			allow = append(allow, f.IPBlock.CIDR)
 			except = append(except, f.IPBlock.Except...)
 		}
+		common := []string{}
+		if len(except) > 0 {
+			common = append(common, fmt.Sprintf("ip saddr != { %s }", strings.Join(except, ", ")))
+		}
+		if len(allow) > 0 {
+			common = append(common, fmt.Sprintf("ip saddr { %s }", strings.Join(allow, ", ")))
+		}
+		tcpPorts := []string{}
+		udpPorts := []string{}
+		for _, p := range i.Ports {
+			proto := proto(p.Protocol)
+			if proto == "tcp" {
+				tcpPorts = append(tcpPorts, fmt.Sprint(p.Port))
+			} else if proto == "udp" {
+				udpPorts = append(udpPorts, fmt.Sprint(p.Port))
+			}
+		}
+		comment := fmt.Sprintf("accept traffic for k8s network policy %s", np.ObjectMeta.Name)
+		if len(tcpPorts) > 0 {
+			rules = append(rules, assembleDestinationPortRule(common, "tcp", tcpPorts, comment))
+		}
+		if len(udpPorts) > 0 {
+			rules = append(rules, assembleDestinationPortRule(common, "udp", udpPorts, comment))
+		}
 	}
+	return rules
+}
+
+func IngressRules(svc corev1.Service) []string {
+	allow := []string{}
+	if len(svc.Spec.LoadBalancerSourceRanges) == 0 {
+		allow = append(allow, "0.0.0.0/0")
+	}
+	allow = append(allow, svc.Spec.LoadBalancerSourceRanges...)
 	common := []string{}
-	if len(except) > 0 {
-		common = append(common, fmt.Sprintf("ip saddr != { %s }", strings.Join(except, ", ")))
-	}
 	if len(allow) > 0 {
 		common = append(common, fmt.Sprintf("ip saddr { %s }", strings.Join(allow, ", ")))
 	}
 	common = append(common, fmt.Sprintf("ip daddr %s", svc.Spec.LoadBalancerIP))
 	tcpPorts := []string{}
 	udpPorts := []string{}
-	for _, p := range sp.Service.Spec.Ports {
+	for _, p := range svc.Spec.Ports {
 		proto := proto(&p.Protocol)
 		if proto == "tcp" {
 			tcpPorts = append(tcpPorts, fmt.Sprint(p.Port))

@@ -9,8 +9,6 @@ import (
 	"k8s.io/client-go/rest"
 )
 
-const NetworkPolicyAnnotationServiceName = "network-policy.metal-pod.io/serviceName"
-
 func main() {
 	// c, err := loadClient(".kubeconfig")
 	// if err != nil {

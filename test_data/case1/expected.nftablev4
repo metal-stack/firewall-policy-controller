@@ -20,8 +20,8 @@ table ip mf {
 		jump mf-ct-icmp
 
 		# dynamic ingress rules
-		ip saddr != { 192.168.1.0/24, 192.168.2.0/24, 10.0.1.1/32 } ip saddr { 192.168.0.0/16, 10.0.0.0/16 } ip daddr 212.37.83.1 tcp dport { 80 } accept comment "accept traffic for k8s service test-ns/s1"
-		ip saddr != { 192.168.1.0/24, 192.168.2.0/24, 10.0.1.1/32 } ip saddr { 192.168.0.0/16, 10.0.0.0/16 } ip daddr 212.37.83.1 udp dport { 53 } accept comment "accept traffic for k8s service test-ns/s1"
+		ip saddr { 192.168.0.0/24, 192.168.2.0/24 } ip daddr 212.37.83.1 tcp dport { 80 } accept comment "accept traffic for k8s service test-ns/s1"
+		ip saddr { 192.168.0.0/24, 192.168.2.0/24 } ip daddr 212.37.83.1 udp dport { 53 } accept comment "accept traffic for k8s service test-ns/s1"
 		ip saddr { 212.1.1.1/32 } ip daddr 212.37.83.2 tcp dport { 443 } accept comment "accept traffic for k8s service test-ns/s2"
 
 		# dynamic egress rules
