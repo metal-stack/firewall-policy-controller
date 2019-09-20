@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	k8s "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
@@ -68,17 +69,24 @@ func run() {
 	go svcWatcher.Watch(c)
 	go npWatcher.Watch(c)
 
-	for <-c {
-		rules, err := ctr.FetchAndAssemble()
-		if err != nil {
-			logger.Errorw("could not fetch k8s entities to build firewall rules", "error", err)
-		}
-		logger.Infow("new fw rules to enforce")
-		for _, i := range rules.IngressRules {
-			fmt.Printf("ingress: %s\n", i)
-		}
-		for _, e := range rules.EgressRules {
-			fmt.Printf("egress: %s\n", e)
+	d := time.Second * 3
+	t := time.NewTimer(d)
+	for {
+		select {
+		case <-c:
+			t.Reset(d)
+		case <-t.C:
+			rules, err := ctr.FetchAndAssemble()
+			if err != nil {
+				logger.Errorw("could not fetch k8s entities to build firewall rules", "error", err)
+			}
+			logger.Infow("new fw rules to enforce", "ingress", len(rules.IngressRules), "egress", len(rules.EgressRules))
+			for k, i := range rules.IngressRules {
+				fmt.Printf("%d ingress: %s\n", k+1, i)
+			}
+			for k, e := range rules.EgressRules {
+				fmt.Printf("%d egress: %s\n", k+1, e)
+			}
 		}
 	}
 }
