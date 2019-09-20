@@ -1,6 +1,6 @@
-package main
+package controller
 
-const NFTABLE_TEMPLATE_V4 = `create table mf
+const nftableTemplateIpv4 = `create table mf
 table ip mf {
 	chain mf-input {
 		type filter hook input priority 0;

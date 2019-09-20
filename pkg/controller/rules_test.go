@@ -1,4 +1,4 @@
-package main
+package controller
 
 import (
 	"path"
@@ -14,7 +14,7 @@ import (
 	testclient "k8s.io/client-go/kubernetes/fake"
 )
 
-func TestPolicyEnforcementWithTestData(t *testing.T) {
+func TestFetchAndAssembleWithTestData(t *testing.T) {
 	for _, tc := range list("test_data", true) {
 		t.Run(tc, func(t *testing.T) {
 			tcd := path.Join("test_data", tc)
@@ -29,10 +29,13 @@ func TestPolicyEnforcementWithTestData(t *testing.T) {
 				mustUnmarshal(path.Join(tcd, "policies", i), &np)
 				c.NetworkingV1().NetworkPolicies(np.ObjectMeta.Namespace).Create(&np)
 			}
-			fw := NewMetalFirewall(c)
-			fw.AssembleRules()
+			controller := NewFirewallController(c, nil)
+			rules, err := controller.FetchAndAssemble()
+			if err != nil {
+				panic(err)
+			}
 			exp, _ := ioutil.ReadFile(path.Join(tcd, "expected.nftablev4"))
-			assert.Equal(t, string(exp), fw.render())
+			assert.Equal(t, string(exp), rules.ToString())
 		})
 	}
 }

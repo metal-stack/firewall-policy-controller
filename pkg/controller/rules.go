@@ -1,14 +1,65 @@
-package main
+package controller
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
+	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 )
 
-func IngressRulesNP(np networkingv1.NetworkPolicy) []string {
+// FirewallResources holds the k8s entities that serve as input for the generation of firewall rules.
+type FirewallResources struct {
+	NetworkPolicyList *networkingv1.NetworkPolicyList
+	ServiceList       *corev1.ServiceList
+}
+
+// FirewallRules hold the nftable rules that are generated from k8s entities.
+type FirewallRules struct {
+	IngressRules []string
+	EgressRules  []string
+}
+
+func (fr *FirewallResources) assembleRules() (*FirewallRules, error) {
+	result := &FirewallRules{}
+	for _, np := range fr.NetworkPolicyList.Items {
+		hasEgress := false
+		hasIngress := false
+		for _, pt := range np.Spec.PolicyTypes {
+			switch strings.ToLower(string(pt)) {
+			case "ingress":
+				hasIngress = true
+			case "egress":
+				hasEgress = true
+			case "both":
+				hasIngress = true
+				hasEgress = true
+			}
+		}
+		if hasEgress {
+			result.EgressRules = append(result.EgressRules, egressRulesForNetworkPolicy(np)...)
+		}
+		if hasIngress {
+			result.IngressRules = append(result.EgressRules, ingressRulesForNetworkPolicy(np)...)
+		}
+	}
+	for _, svc := range fr.ServiceList.Items {
+		result.IngressRules = append(result.IngressRules, ingressRulesForService(svc)...)
+	}
+	return result, nil
+}
+
+// ToString renders the firewall rules to a string
+func (r *FirewallRules) ToString() string {
+	var b bytes.Buffer
+	tpl := template.Must(template.New("v4").Parse(nftableTemplateIpv4))
+	tpl.Execute(&b, r)
+	return b.String()
+}
+
+func ingressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 	ingress := np.Spec.Ingress
 	if ingress == nil {
 		return nil
@@ -52,7 +103,7 @@ func IngressRulesNP(np networkingv1.NetworkPolicy) []string {
 	return rules
 }
 
-func IngressRules(svc corev1.Service) []string {
+func ingressRulesForService(svc corev1.Service) []string {
 	allow := []string{}
 	if len(svc.Spec.LoadBalancerSourceRanges) == 0 {
 		allow = append(allow, "0.0.0.0/0")
@@ -84,7 +135,7 @@ func IngressRules(svc corev1.Service) []string {
 	return rules
 }
 
-func EgressRules(np networkingv1.NetworkPolicy) []string {
+func egressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 	egress := np.Spec.Egress
 	if egress == nil {
 		return nil
