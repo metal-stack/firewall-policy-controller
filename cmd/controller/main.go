@@ -2,11 +2,9 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 
-	"github.com/ghodss/yaml"
 	k8s "k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"os"
 
@@ -58,7 +56,7 @@ func init() {
 }
 
 func run() {
-	client, err := loadClient(viper.GetString("kubecfg"))
+	client, err := loadClient("/home/markus/repos_fits/cloud-native/metal/firewall/kubeconfig")
 	if err != nil {
 		logger.Errorw("unable to connect to k8s", "error", err)
 		os.Exit(1)
@@ -75,18 +73,20 @@ func run() {
 		if err != nil {
 			logger.Errorw("could not fetch k8s entities to build firewall rules", "error", err)
 		}
-		logger.Infow("new fw rules", "rules", rules.ToString())
+		logger.Infow("new fw rules to enforce")
+		for _, i := range rules.IngressRules {
+			fmt.Printf("ingress: %s\n", i)
+		}
+		for _, e := range rules.EgressRules {
+			fmt.Printf("egress: %s\n", e)
+		}
 	}
 }
 
 func loadClient(kubeconfigPath string) (*k8s.Clientset, error) {
-	data, err := ioutil.ReadFile(kubeconfigPath)
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfigPath)
 	if err != nil {
-		return nil, fmt.Errorf("read kubeconfig: %v", err)
+		return nil, err
 	}
-	var config rest.Config
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		return nil, fmt.Errorf("unmarshal kubeconfig: %v", err)
-	}
-	return k8s.NewForConfig(&config)
+	return k8s.NewForConfig(config)
 }

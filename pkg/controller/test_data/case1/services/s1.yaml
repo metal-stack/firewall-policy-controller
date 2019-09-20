@@ -10,9 +10,11 @@
     - 192.168.0.0/24
     - 192.168.2.0/24
     ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8063
-    - protocol: UDP
+    - name: test
+      protocol: TCP
       port: 53
       targetPort: 8064

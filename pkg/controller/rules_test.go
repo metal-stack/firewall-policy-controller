@@ -35,7 +35,7 @@ func TestFetchAndAssembleWithTestData(t *testing.T) {
 				panic(err)
 			}
 			exp, _ := ioutil.ReadFile(path.Join(tcd, "expected.nftablev4"))
-			assert.Equal(t, string(exp), rules.ToString())
+			assert.Equal(t, string(exp), rules.Render())
 		})
 	}
 }

@@ -51,8 +51,8 @@ func (fr *FirewallResources) assembleRules() (*FirewallRules, error) {
 	return result, nil
 }
 
-// ToString renders the firewall rules to a string
-func (r *FirewallRules) ToString() string {
+// Render renders the firewall rules to a string
+func (r *FirewallRules) Render() string {
 	var b bytes.Buffer
 	tpl := template.Must(template.New("v4").Parse(nftableTemplateIpv4))
 	tpl.Execute(&b, r)
@@ -104,6 +104,9 @@ func ingressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 }
 
 func ingressRulesForService(svc corev1.Service) []string {
+	if svc.Spec.Type != corev1.ServiceTypeLoadBalancer && svc.Spec.Type != corev1.ServiceTypeNodePort {
+		return nil
+	}
 	allow := []string{}
 	if len(svc.Spec.LoadBalancerSourceRanges) == 0 {
 		allow = append(allow, "0.0.0.0/0")

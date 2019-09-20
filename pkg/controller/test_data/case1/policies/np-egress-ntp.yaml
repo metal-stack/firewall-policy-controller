@@ -5,6 +5,7 @@ metadata:
   name: np-egress-ntp
   namespace: default
 spec:
+  podSelector: {}
   policyTypes:
   - Egress
   egress:
