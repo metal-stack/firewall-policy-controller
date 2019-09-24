@@ -16,11 +16,11 @@ table ip firewall {
 		ip saddr { 212.1.1.1/32 } ip daddr 212.37.83.2 tcp dport { 443 } counter accept comment "accept traffic for k8s service test-ns/s2"
 
 		# dynamic egress rules
-		ip daddr { 1.1.1.1/32, 1.0.0.1/32 } tcp dport { 53 } counter accept comment "accept traffic for np np-egress-dns"
-		ip daddr { 1.1.1.1/32, 1.0.0.1/32 } udp dport { 53 } counter accept comment "accept traffic for np np-egress-dns"
-		ip daddr { 162.159.200.1/32 } udp dport { 123 } counter accept comment "accept traffic for np np-egress-ntp"
+		ip daddr { 1.1.1.1/32, 1.0.0.1/32 } tcp dport { 53 } counter accept comment "accept traffic for np np-egress-dns tcp"
+		ip daddr { 1.1.1.1/32, 1.0.0.1/32 } udp dport { 53 } counter accept comment "accept traffic for np np-egress-dns udp"
+		ip daddr { 162.159.200.1/32 } udp dport { 123 } counter accept comment "accept traffic for np np-egress-ntp udp"
 
 		counter comment "count dropped packets"
-		limit rate 2/minute counter packets 1 bytes 40 log prefix "nftables-dropped: "
+		limit rate 2/minute counter packets 1 bytes 40 log prefix "nftables-firewall-dropped: "
 	}
 }
