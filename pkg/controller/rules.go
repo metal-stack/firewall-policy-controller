@@ -182,6 +182,7 @@ func egressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 func assembleDestinationPortRule(common []string, protocol string, ports []string, comment string) string {
 	parts := common
 	parts = append(parts, fmt.Sprintf("%s dport { %s }", protocol, strings.Join(ports, ", ")))
+	parts = append(parts, "counter")
 	parts = append(parts, "accept")
 	if comment != "" {
 		parts = append(parts, "comment", fmt.Sprintf(`"%s"`, comment))
