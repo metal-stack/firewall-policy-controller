@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
 	"time"
 
 	k8s "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
+	"io/ioutil"
 	"os"
 
 	"go.uber.org/zap"
@@ -23,6 +25,8 @@ import (
 
 const (
 	moduleName = "firewall-policy-controller"
+	nftFile    = "/etc/nftables/firewall-policy-controller.v4"
+	nftBin     = "/usr/sbin/nft"
 )
 
 var (
@@ -53,6 +57,7 @@ func init() {
 		logger.Fatal(err)
 	}
 	rootCmd.PersistentFlags().StringP("kubecfg", "k", homedir+"/.kube/config", "kubecfg path to the cluster to account")
+	rootCmd.PersistentFlags().Bool("dry-run", false, "just print the rules that would be enforced without applying them with nft")
 	viper.BindPFlags(rootCmd.PersistentFlags())
 }
 
@@ -86,6 +91,22 @@ func run() {
 			}
 			for k, e := range rules.EgressRules {
 				fmt.Printf("%d egress: %s\n", k+1, e)
+			}
+			if !viper.GetBool("dry-run") {
+				ioutil.WriteFile(nftFile, []byte(rules.Render()), 0644)
+				c := exec.Command(nftBin, "-c", "-f", nftFile)
+				err = c.Run()
+				if err != nil {
+					logger.Errorw("nftables file is invalid", "file", nftFile)
+					continue
+				}
+				c = exec.Command(nftBin, "-f", nftFile)
+				err = c.Run()
+				if err != nil {
+					logger.Errorw("nftables file could not be loaded", "file", nftFile)
+					continue
+				}
+				logger.Info("applied new set of nftable rules")
 			}
 		}
 	}
