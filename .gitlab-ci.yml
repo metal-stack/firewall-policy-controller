@@ -1,0 +1,46 @@
+---
+image: registry.fi-ts.io/cloud-native/go-builder:latest
+
+stages:
+  - test
+  - deploy
+
+unit-tests:
+  stage: test
+  script:
+    - make test
+
+.blobstore_tpl: &blobstore
+  stage: deploy
+  script:
+    - make
+    - strip bin/firewall-policy-controller
+    - tar -czvf firewall-policy-controller.tar.gz -C ./bin firewall-policy-controller
+    - curl -fLS https://dl.minio.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
+    - chmod +x /usr/local/bin/mc
+    - mc config host add fits https://blobstore.fi-ts.io $BLOB_ACCESS_KEY "${BLOB_SECRET_KEY}"
+    - mc cp firewall-policy-controller.tar.gz fits/cloud-native/firewall-policy-controller-${suffix}.tar.gz
+
+# This job is triggered only for a "stable" tagged branch to always have a version that is known to work properly.
+stable:
+  <<: *blobstore
+  variables:
+    suffix: stable
+  only:
+    - stable
+
+# This job is triggered for every pipeline that runs in master branch to have bleeding edge version.
+latest:
+  <<: *blobstore
+  variables:
+    suffix: latest
+  only:
+    - master
+
+# This job is triggered for every merge request.
+mergerequest:
+  <<: *blobstore
+  variables:
+    suffix: ${CI_COMMIT_REF_SLUG}
+  only:
+    - merge_requests

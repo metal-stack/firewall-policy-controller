@@ -170,10 +170,10 @@ func egressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 		}
 		comment := fmt.Sprintf("accept traffic for np %s", np.ObjectMeta.Name)
 		if len(tcpPorts) > 0 {
-			rules = append(rules, assembleDestinationPortRule(common, "tcp", tcpPorts, comment))
+			rules = append(rules, assembleDestinationPortRule(common, "tcp", tcpPorts, comment+" tcp"))
 		}
 		if len(udpPorts) > 0 {
-			rules = append(rules, assembleDestinationPortRule(common, "udp", udpPorts, comment))
+			rules = append(rules, assembleDestinationPortRule(common, "udp", udpPorts, comment+" udp"))
 		}
 	}
 	return rules

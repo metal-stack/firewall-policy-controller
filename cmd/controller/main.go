@@ -57,7 +57,7 @@ func init() {
 }
 
 func run() {
-	client, err := loadClient("/home/markus/repos_fits/cloud-native/metal/firewall/kubeconfig")
+	client, err := loadClient(viper.GetString("kubecfg"))
 	if err != nil {
 		logger.Errorw("unable to connect to k8s", "error", err)
 		os.Exit(1)
