@@ -51,13 +51,14 @@ func main() {
 }
 
 func init() {
-	viper.SetEnvPrefix("FIREWALL_")
+	viper.SetEnvPrefix("firewall")
 	homedir, err := homedir.Dir()
 	if err != nil {
 		logger.Fatal(err)
 	}
 	rootCmd.PersistentFlags().StringP("kubecfg", "k", homedir+"/.kube/config", "kubecfg path to the cluster to account")
 	rootCmd.PersistentFlags().Bool("dry-run", false, "just print the rules that would be enforced without applying them with nft")
+	viper.AutomaticEnv()
 	viper.BindPFlags(rootCmd.PersistentFlags())
 }
 
