@@ -1,4 +1,3 @@
-flush table firewall
 table ip firewall {
 	chain forward {
 		type filter hook forward priority 1; policy drop;

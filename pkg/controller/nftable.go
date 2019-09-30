@@ -1,7 +1,6 @@
 package controller
 
-const nftableTemplateIpv4 = `flush table firewall
-table ip firewall {
+const nftableTemplateIpv4 = `table ip firewall {
 	chain forward {
 		type filter hook forward priority 1; policy drop;
 
