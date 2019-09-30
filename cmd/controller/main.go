@@ -24,9 +24,11 @@ import (
 )
 
 const (
-	moduleName = "firewall-policy-controller"
-	nftFile    = "/etc/nftables/firewall-policy-controller.v4"
-	nftBin     = "/usr/sbin/nft"
+	moduleName      = "firewall-policy-controller"
+	nftFile         = "/etc/nftables/firewall-policy-controller.v4"
+	nftBin          = "/usr/sbin/nft"
+	nftablesService = "nftables.service"
+	systemctlBin    = "/bin/systemctl"
 )
 
 var (
@@ -96,15 +98,15 @@ func run() {
 			if !viper.GetBool("dry-run") {
 				ioutil.WriteFile(nftFile, []byte(rules.Render()), 0644)
 				c := exec.Command(nftBin, "-c", "-f", nftFile)
-				err = c.Run()
+				out, err := c.Output()
 				if err != nil {
-					logger.Errorw("nftables file is invalid", "file", nftFile)
+					logger.Errorw("nftables file is invalid", "file", nftFile, "error", fmt.Sprint(out))
 					continue
 				}
-				c = exec.Command(nftBin, "-f", nftFile)
+				c = exec.Command(systemctlBin, "restart", nftablesService)
 				err = c.Run()
 				if err != nil {
-					logger.Errorw("nftables file could not be loaded", "file", nftFile)
+					logger.Errorw("nftables.service file could not be restarted")
 					continue
 				}
 				logger.Info("applied new set of nftable rules")
