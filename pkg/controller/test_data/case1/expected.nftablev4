@@ -12,8 +12,8 @@ table ip firewall {
 		ip protocol icmp icmp type { destination-unreachable, router-solicitation, router-advertisement, time-exceeded, parameter-problem } counter accept comment "accept icmp"
 
 		# dynamic ingress rules
-		ip saddr { 192.168.0.0/24, 192.168.2.0/24 } ip daddr 212.37.83.1 tcp dport { 80, 53 } counter accept comment "accept traffic for k8s service test-ns/s1"
-		ip saddr { 212.1.1.1/32 } ip daddr 212.37.83.2 tcp dport { 443 } counter accept comment "accept traffic for k8s service test-ns/s2"
+		ip saddr { 192.168.0.0/24, 192.168.2.0/24 } ip daddr { 212.37.83.1 } tcp dport { 80, 53 } counter accept comment "accept traffic for k8s service test-ns/s1"
+		ip saddr { 212.1.1.1/32 } ip daddr { 212.37.83.2 } tcp dport { 443 } counter accept comment "accept traffic for k8s service test-ns/s2"
 
 		# dynamic egress rules
 		ip daddr { 1.1.1.1/32, 1.0.0.1/32 } tcp dport { 53 } counter accept comment "accept traffic for np np-egress-dns tcp"

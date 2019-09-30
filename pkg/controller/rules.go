@@ -116,7 +116,14 @@ func ingressRulesForService(svc corev1.Service) []string {
 	if len(allow) > 0 {
 		common = append(common, fmt.Sprintf("ip saddr { %s }", strings.Join(allow, ", ")))
 	}
-	common = append(common, fmt.Sprintf("ip daddr %s", svc.Spec.LoadBalancerIP))
+	ips := []string{}
+	if svc.Spec.LoadBalancerIP != "" {
+		ips = append(ips, svc.Spec.LoadBalancerIP)
+	}
+	for _, e := range svc.Status.LoadBalancer.Ingress {
+		ips = append(ips, e.IP)
+	}
+	common = append(common, fmt.Sprintf("ip daddr { %s }", strings.Join(ips, ", ")))
 	tcpPorts := []string{}
 	udpPorts := []string{}
 	for _, p := range svc.Spec.Ports {
