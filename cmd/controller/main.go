@@ -59,7 +59,8 @@ func init() {
 		logger.Fatal(err)
 	}
 	rootCmd.PersistentFlags().StringP("kubecfg", "k", homedir+"/.kube/config", "kubecfg path to the cluster to account")
-	rootCmd.PersistentFlags().Bool("dry-run", false, "just print the rules that would be enforced without applying them with nft")
+	rootCmd.PersistentFlags().Bool("dry-run", false, "just print the rules that would be enforced without applying them")
+	rootCmd.PersistentFlags().Duration("fetch-interval", 10*time.Second, "interval for reassembling firewall rules")
 	viper.AutomaticEnv()
 	viper.BindPFlags(rootCmd.PersistentFlags())
 }
@@ -76,6 +77,13 @@ func run() {
 	npWatcher := watcher.NewNetworkPolicyWatcher(logger, client)
 	go svcWatcher.Watch(c)
 	go npWatcher.Watch(c)
+	go func() {
+		t := time.NewTicker(viper.GetDuration("fetch-interval"))
+		for {
+			_ = <-t.C
+			c <- true
+		}
+	}()
 
 	d := time.Second * 3
 	t := time.NewTimer(d)
