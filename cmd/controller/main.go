@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	controller "git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/controller"
+	"git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/droptailer"
 	"git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/watcher"
 	"git.f-i-ts.de/cloud-native/metallib/version"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
@@ -78,8 +79,15 @@ func run() {
 	c := make(chan bool)
 	svcWatcher := watcher.NewServiceWatcher(logger, client)
 	npWatcher := watcher.NewNetworkPolicyWatcher(logger, client)
+	dropTailer := droptailer.NewDropTailer(logger, client)
+	err = dropTailer.Deploy()
+	if err != nil {
+		logger.Errorw("unable to deploy droptailer to k8s", "error", err)
+		os.Exit(1)
+	}
 	go svcWatcher.Watch(c)
 	go npWatcher.Watch(c)
+	go dropTailer.Watch()
 	go func() {
 		t := time.NewTicker(viper.GetDuration("fetch-interval"))
 		for {
