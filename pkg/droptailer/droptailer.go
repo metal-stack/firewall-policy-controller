@@ -23,6 +23,7 @@ type DropTailer struct {
 	port      int32
 	replicas  int32
 	hosts     *txeh.Hosts
+	oldPodIP  string
 }
 
 // NewDropTailer creates a new DropTailer
@@ -127,7 +128,8 @@ func (d *DropTailer) Watch() error {
 			d.logger.Infof("phase:%s", p.Status.Phase)
 			d.logger.Infof("podIP:%s", p.Status.PodIP)
 			podIP := p.Status.PodIP
-			if podIP != "" {
+			if podIP != "" && d.oldPodIP != podIP {
+				d.oldPodIP = podIP
 				d.hosts.RemoveHost("droptailer")
 				d.hosts.AddHost(p.Status.PodIP, "droptailer")
 			}
