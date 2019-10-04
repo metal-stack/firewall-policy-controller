@@ -79,7 +79,11 @@ func run() {
 	c := make(chan bool)
 	svcWatcher := watcher.NewServiceWatcher(logger, client)
 	npWatcher := watcher.NewNetworkPolicyWatcher(logger, client)
-	dropTailer := droptailer.NewDropTailer(logger, client)
+	dropTailer, err := droptailer.NewDropTailer(logger, client)
+	if err != nil {
+		logger.Errorw("unable to create droptailer client", "error", err)
+		os.Exit(1)
+	}
 	err = dropTailer.Deploy()
 	if err != nil {
 		logger.Errorw("unable to deploy droptailer to k8s", "error", err)
