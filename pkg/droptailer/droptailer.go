@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/txn2/txeh"
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
@@ -21,10 +22,15 @@ type DropTailer struct {
 	namespace string
 	port      int32
 	replicas  int32
+	hosts     *txeh.Hosts
 }
 
 // NewDropTailer creates a new DropTailer
-func NewDropTailer(logger *zap.SugaredLogger, client k8s.Interface) *DropTailer {
+func NewDropTailer(logger *zap.SugaredLogger, client k8s.Interface) (*DropTailer, error) {
+	hosts, err := txeh.NewHostsDefault()
+	if err != nil {
+		return nil, fmt.Errorf("unable to create hosts editor:%w", err)
+	}
 	return &DropTailer{
 		client:    client,
 		logger:    logger,
@@ -33,7 +39,8 @@ func NewDropTailer(logger *zap.SugaredLogger, client k8s.Interface) *DropTailer 
 		image:     "metalpod/droptailer:latest",
 		port:      50051,
 		replicas:  1,
-	}
+		hosts:     hosts,
+	}, nil
 }
 
 // Deploy the DropTailer
@@ -119,7 +126,11 @@ func (d *DropTailer) Watch() error {
 			d.logger.Infof("status:%s", p.Status.ContainerStatuses)
 			d.logger.Infof("phase:%s", p.Status.Phase)
 			d.logger.Infof("podIP:%s", p.Status.PodIP)
-			// TODO update /etc/hosts entry with this podIP
+			podIP := p.Status.PodIP
+			if podIP != "" {
+				d.hosts.RemoveHost("droptailer")
+				d.hosts.AddHost(p.Status.PodIP, "droptailer")
+			}
 		}
 	}
 }
