@@ -111,10 +111,10 @@ func run() {
 					logger.Errorw("nftables file is invalid", "file", nftFile, "error", fmt.Sprint(out))
 					continue
 				}
-				c = exec.Command(systemctlBin, "restart", nftablesService)
+				c = exec.Command(systemctlBin, "reload", nftablesService)
 				err = c.Run()
 				if err != nil {
-					logger.Errorw("nftables.service file could not be restarted")
+					logger.Errorw("nftables.service file could not be reloaded")
 					continue
 				}
 				logger.Info("applied new set of nftable rules")
