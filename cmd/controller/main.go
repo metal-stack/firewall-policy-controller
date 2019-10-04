@@ -62,7 +62,10 @@ func init() {
 	rootCmd.PersistentFlags().Bool("dry-run", false, "just print the rules that would be enforced without applying them")
 	rootCmd.PersistentFlags().Duration("fetch-interval", 10*time.Second, "interval for reassembling firewall rules")
 	viper.AutomaticEnv()
-	viper.BindPFlags(rootCmd.PersistentFlags())
+	err = viper.BindPFlags(rootCmd.PersistentFlags())
+	if err != nil {
+		logger.Fatal(err)
+	}
 }
 
 func run() {
@@ -80,7 +83,7 @@ func run() {
 	go func() {
 		t := time.NewTicker(viper.GetDuration("fetch-interval"))
 		for {
-			_ = <-t.C
+			<-t.C
 			c <- true
 		}
 	}()
@@ -104,7 +107,16 @@ func run() {
 				fmt.Printf("%d egress: %s\n", k+1, e)
 			}
 			if !viper.GetBool("dry-run") {
-				ioutil.WriteFile(nftFile, []byte(rules.Render()), 0644)
+				rs, err := rules.Render()
+				if err != nil {
+					logger.Errorw("error rendering nftables rules", "error", err)
+					continue
+				}
+				err = ioutil.WriteFile(nftFile, []byte(rs), 0644)
+				if err != nil {
+					logger.Errorw("error writing nftables file", "file", nftFile, "error", err)
+					continue
+				}
 				c := exec.Command(nftBin, "-c", "-f", nftFile)
 				out, err := c.Output()
 				if err != nil {

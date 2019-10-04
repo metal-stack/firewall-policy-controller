@@ -52,11 +52,14 @@ func (fr *FirewallResources) assembleRules() (*FirewallRules, error) {
 }
 
 // Render renders the firewall rules to a string
-func (r *FirewallRules) Render() string {
+func (r *FirewallRules) Render() (string, error) {
 	var b bytes.Buffer
 	tpl := template.Must(template.New("v4").Parse(nftableTemplateIpv4))
-	tpl.Execute(&b, r)
-	return b.String()
+	err := tpl.Execute(&b, r)
+	if err != nil {
+		return "", err
+	}
+	return b.String(), nil
 }
 
 func ingressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
