@@ -100,14 +100,8 @@ func (d *DropTailer) Deploy() error {
 }
 
 // Watch the droptailer, gather pod ip and update /etc/hosts
-func (d *DropTailer) Watch() error {
-	labelSelector := &metav1.LabelSelector{
-		MatchLabels: map[string]string{"app": d.podname},
-	}
-	labelMap, err := metav1.LabelSelectorAsMap(labelSelector)
-	if err != nil {
-		return fmt.Errorf("unable to create labelselector:%w", err)
-	}
+func (d *DropTailer) Watch() {
+	labelMap := map[string]string{"app": d.podname}
 	opts := metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(labelMap).String(),
 	}
@@ -123,15 +117,12 @@ func (d *DropTailer) Watch() error {
 			if !ok {
 				d.logger.Error("unexpected type")
 			}
-
-			d.logger.Infof("status:%s", p.Status.ContainerStatuses)
-			d.logger.Infof("phase:%s", p.Status.Phase)
-			d.logger.Infof("podIP:%s", p.Status.PodIP)
 			podIP := p.Status.PodIP
 			if podIP != "" && d.oldPodIP != podIP {
-				d.oldPodIP = podIP
+				d.logger.Infow("podIP changed, update /etc/hosts", "old", d.oldPodIP, "new", podIP)
 				d.hosts.RemoveHost("droptailer")
 				d.hosts.AddHost(p.Status.PodIP, "droptailer")
+				d.oldPodIP = podIP
 			}
 		}
 	}
