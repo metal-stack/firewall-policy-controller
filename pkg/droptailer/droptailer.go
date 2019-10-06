@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	appsv1 "k8s.io/api/apps/v1"
 	apiv1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	k8s "k8s.io/client-go/kubernetes"
@@ -82,6 +83,12 @@ func (d *DropTailer) Deploy() error {
 								{
 									Protocol:      apiv1.ProtocolTCP,
 									ContainerPort: d.port,
+								},
+							},
+							Resources: apiv1.ResourceRequirements{
+								Limits: apiv1.ResourceList{
+									"cpu":    resource.MustParse("200m"),
+									"memory": resource.MustParse("128Mi"),
 								},
 							},
 						},
