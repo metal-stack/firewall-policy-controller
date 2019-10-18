@@ -22,7 +22,7 @@ func NewFirewallController(client k8s.Interface, logger *zap.SugaredLogger) *Fir
 
 // FetchAndAssemble fetches resources from k8s and assembles firewall rules for them
 func (f *FirewallController) FetchAndAssemble() (*FirewallRules, error) {
-	r, err := f.fetchResouces()
+	r, err := f.fetchResources()
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (f *FirewallController) FetchAndAssemble() (*FirewallRules, error) {
 	return rules, nil
 }
 
-func (f *FirewallController) fetchResouces() (*FirewallResources, error) {
+func (f *FirewallController) fetchResources() (*FirewallResources, error) {
 	npl, err := f.c.NetworkingV1().NetworkPolicies(metav1.NamespaceAll).List(metav1.ListOptions{})
 	if err != nil {
 		return nil, err

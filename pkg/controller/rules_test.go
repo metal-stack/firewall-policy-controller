@@ -22,12 +22,14 @@ func TestFetchAndAssembleWithTestData(t *testing.T) {
 			for _, i := range list(path.Join(tcd, "services"), false) {
 				var svc corev1.Service
 				mustUnmarshal(path.Join(tcd, "services", i), &svc)
-				c.CoreV1().Services(svc.ObjectMeta.Namespace).Create(&svc)
+				_, err := c.CoreV1().Services(svc.ObjectMeta.Namespace).Create(&svc)
+				assert.Nil(t, err)
 			}
 			for _, i := range list(path.Join(tcd, "policies"), false) {
 				var np networkingv1.NetworkPolicy
 				mustUnmarshal(path.Join(tcd, "policies", i), &np)
-				c.NetworkingV1().NetworkPolicies(np.ObjectMeta.Namespace).Create(&np)
+				_, err := c.NetworkingV1().NetworkPolicies(np.ObjectMeta.Namespace).Create(&np)
+				assert.Nil(t, err)
 			}
 			controller := NewFirewallController(c, nil)
 			rules, err := controller.FetchAndAssemble()
@@ -35,7 +37,9 @@ func TestFetchAndAssembleWithTestData(t *testing.T) {
 				panic(err)
 			}
 			exp, _ := ioutil.ReadFile(path.Join(tcd, "expected.nftablev4"))
-			assert.Equal(t, string(exp), rules.Render())
+			rs, err := rules.Render()
+			assert.Nil(t, err)
+			assert.Equal(t, string(exp), rs)
 		})
 	}
 }

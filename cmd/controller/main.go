@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	controller "git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/controller"
+	"git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/droptailer"
 	"git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/watcher"
 	"git.f-i-ts.de/cloud-native/metallib/version"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
@@ -62,7 +63,10 @@ func init() {
 	rootCmd.PersistentFlags().Bool("dry-run", false, "just print the rules that would be enforced without applying them")
 	rootCmd.PersistentFlags().Duration("fetch-interval", 10*time.Second, "interval for reassembling firewall rules")
 	viper.AutomaticEnv()
-	viper.BindPFlags(rootCmd.PersistentFlags())
+	err = viper.BindPFlags(rootCmd.PersistentFlags())
+	if err != nil {
+		logger.Fatal(err)
+	}
 }
 
 func run() {
@@ -75,12 +79,23 @@ func run() {
 	c := make(chan bool)
 	svcWatcher := watcher.NewServiceWatcher(logger, client)
 	npWatcher := watcher.NewNetworkPolicyWatcher(logger, client)
+	dropTailer, err := droptailer.NewDropTailer(logger, client)
+	if err != nil {
+		logger.Errorw("unable to create droptailer client", "error", err)
+		os.Exit(1)
+	}
+	err = dropTailer.Deploy()
+	if err != nil {
+		logger.Errorw("unable to deploy droptailer to k8s", "error", err)
+		os.Exit(1)
+	}
 	go svcWatcher.Watch(c)
 	go npWatcher.Watch(c)
+	go dropTailer.Watch()
 	go func() {
 		t := time.NewTicker(viper.GetDuration("fetch-interval"))
 		for {
-			_ = <-t.C
+			<-t.C
 			c <- true
 		}
 	}()
@@ -104,7 +119,16 @@ func run() {
 				fmt.Printf("%d egress: %s\n", k+1, e)
 			}
 			if !viper.GetBool("dry-run") {
-				ioutil.WriteFile(nftFile, []byte(rules.Render()), 0644)
+				rs, err := rules.Render()
+				if err != nil {
+					logger.Errorw("error rendering nftables rules", "error", err)
+					continue
+				}
+				err = ioutil.WriteFile(nftFile, []byte(rs), 0644)
+				if err != nil {
+					logger.Errorw("error writing nftables file", "file", nftFile, "error", err)
+					continue
+				}
 				c := exec.Command(nftBin, "-c", "-f", nftFile)
 				out, err := c.Output()
 				if err != nil {
