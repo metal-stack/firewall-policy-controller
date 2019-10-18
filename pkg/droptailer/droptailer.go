@@ -77,7 +77,7 @@ func (d *DropTailer) Deploy() error {
 	}
 
 	// Secret will not be updated
-	secret, err := d.client.CoreV1().Secrets(d.namespace).Get(secretNameDroptailer, metav1.GetOptions{})
+	_, err = d.client.CoreV1().Secrets(d.namespace).Get(secretNameDroptailer, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("unable to get droptailer secret, err: %w", err)
 	}
@@ -91,7 +91,7 @@ func (d *DropTailer) Deploy() error {
 			return fmt.Errorf("could not read server key, err: %w", err)
 		}
 		secretsClient := d.client.CoreV1().Secrets(ns.Name)
-		secret = &apiv1.Secret{
+		secret := &apiv1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: secretNameDroptailer,
 			},
@@ -108,13 +108,13 @@ func (d *DropTailer) Deploy() error {
 
 	deploymentsClient := d.client.AppsV1().Deployments(ns.Name)
 	deploymentName := d.podname
-	deployment, err := deploymentsClient.Get(deploymentName, metav1.GetOptions{})
+	_, err = deploymentsClient.Get(deploymentName, metav1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return fmt.Errorf("unable to get droptailer-server deployment, err: %w", err)
 	}
 	if errors.IsNotFound(err) {
 		userid := int64(1000)
-		deployment = &appsv1.Deployment{
+		deployment := &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: deploymentName,
 			},
