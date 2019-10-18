@@ -13,6 +13,7 @@ unit-tests:
 .blobstore_tpl: &blobstore
   stage: deploy
   script:
+    - make golint
     - make
     - strip bin/firewall-policy-controller
     - tar -czvf firewall-policy-controller.tar.gz -C ./bin firewall-policy-controller
