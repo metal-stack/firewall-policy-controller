@@ -29,7 +29,6 @@ type DropTailer struct {
 	client          k8s.Interface
 	logger          *zap.SugaredLogger
 	podname         string
-	image           string
 	namespace       string
 	hosts           *txeh.Hosts
 	oldPodIP        string
