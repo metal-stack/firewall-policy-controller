@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 
 	controller "git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/controller"
+	"git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/droptailer"
 	"git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/watcher"
 	"git.f-i-ts.de/cloud-native/metallib/version"
 	"git.f-i-ts.de/cloud-native/metallib/zapup"
@@ -77,11 +78,18 @@ func run() {
 	ctr := controller.NewFirewallController(client, logger)
 	svcWatcher := watcher.NewServiceWatcher(logger, client)
 	npWatcher := watcher.NewNetworkPolicyWatcher(logger, client)
+	dropTailer, err := droptailer.NewDropTailer(logger, client)
+	if err != nil {
+		logger.Errorw("unable to create droptailer client", "error", err)
+		os.Exit(1)
+	}
 
 	// watch for services and network policies
 	c := make(chan bool)
 	go svcWatcher.Watch(c)
 	go npWatcher.Watch(c)
+	go dropTailer.WatchServerIP()
+	go dropTailer.WatchClientSecret()
 
 	// regularly trigger fetch of k8s resources
 	go func() {
