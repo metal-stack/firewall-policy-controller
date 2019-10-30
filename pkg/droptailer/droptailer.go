@@ -16,12 +16,12 @@ import (
 )
 
 const (
-	secretNamespace            = "droptailer"
-	secretName                 = "droptailer-client"
-	secretKeyServerCertificate = "tls.crt"
-	secretKeyServerKey         = "tls.key"
-	secretKeyCaCertificate     = "ca.crt"
-	defaultCertificateBase     = "/etc/droptailer-client"
+	secretNamespace         = "droptailer"
+	secretName              = "droptailer-client"
+	secretKeyCertificate    = "droptailer-client.crt"
+	secretKeyCertificateKey = "droptailer-client.key"
+	secretKeyCaCertificate  = "ca.crt"
+	defaultCertificateBase  = "/etc/droptailer-client"
 )
 
 // DropTailer is responsible to deploy and watch the droptailer service
@@ -86,7 +86,7 @@ func (d *DropTailer) WatchServerIP() {
 
 // WatchClientSecret watches the droptailer-client secret and saves it to disk for the droptailer-client.
 func (d *DropTailer) WatchClientSecret() {
-	keys := []string{secretKeyCaCertificate, secretKeyServerCertificate, secretKeyServerKey}
+	keys := []string{secretKeyCaCertificate, secretKeyCertificate, secretKeyCertificateKey}
 	for {
 		s, err := d.client.CoreV1().Secrets(secretNamespace).Watch(metav1.ListOptions{})
 		if err != nil {

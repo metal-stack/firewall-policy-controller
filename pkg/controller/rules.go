@@ -168,6 +168,9 @@ func egressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 		allow := []string{}
 		except := []string{}
 		for _, t := range e.To {
+			if t.IPBlock == nil {
+				continue
+			}
 			allow = append(allow, t.IPBlock.CIDR)
 			except = append(except, t.IPBlock.Except...)
 		}
