@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	secretNamespace         = "droptailer"
+	namespace               = "firewall"
 	secretName              = "droptailer-client"
 	secretKeyCertificate    = "droptailer-client.crt"
 	secretKeyCertificateKey = "droptailer-client.key"
@@ -49,7 +49,7 @@ func NewDropTailer(logger *zap.SugaredLogger, client k8s.Interface) (*DropTailer
 		client:          client,
 		logger:          logger,
 		podname:         "droptailer",
-		namespace:       "firewall",
+		namespace:       namespace,
 		hosts:           hosts,
 		certificateBase: certificateBase,
 	}, nil
@@ -88,7 +88,7 @@ func (d *DropTailer) WatchServerIP() {
 func (d *DropTailer) WatchClientSecret() {
 	keys := []string{secretKeyCaCertificate, secretKeyCertificate, secretKeyCertificateKey}
 	for {
-		s, err := d.client.CoreV1().Secrets(secretNamespace).Watch(metav1.ListOptions{})
+		s, err := d.client.CoreV1().Secrets(namespace).Watch(metav1.ListOptions{})
 		if err != nil {
 			d.logger.Errorw("could not watch for pods droptailer-client secret", "error", err)
 			time.Sleep(10 * time.Second)
