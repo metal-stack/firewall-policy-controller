@@ -3,6 +3,7 @@ package controller
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -42,13 +43,57 @@ func (fr *FirewallResources) assembleRules() (*FirewallRules, error) {
 			result.EgressRules = append(result.EgressRules, egressRulesForNetworkPolicy(np)...)
 		}
 		if hasIngress {
-			result.IngressRules = append(result.EgressRules, ingressRulesForNetworkPolicy(np)...)
+			result.IngressRules = append(result.IngressRules, ingressRulesForNetworkPolicy(np)...)
 		}
 	}
 	for _, svc := range fr.ServiceList.Items {
 		result.IngressRules = append(result.IngressRules, ingressRulesForService(svc)...)
 	}
+	result.EgressRules = uniqueSorted(result.EgressRules)
+	result.IngressRules = uniqueSorted(result.IngressRules)
 	return result, nil
+}
+
+// HasChanged checks whether new firewall rules have changed in comparison to the last run
+func (r *FirewallRules) HasChanged(oldRules *FirewallRules) bool {
+	if oldRules == nil {
+		return true
+	}
+
+	if len(r.IngressRules) != len(oldRules.IngressRules) {
+		return true
+	}
+
+	if len(r.EgressRules) != len(oldRules.EgressRules) {
+		return true
+	}
+
+	for k, v := range r.IngressRules {
+		if oldRules.IngressRules[k] != v {
+			return true
+		}
+	}
+
+	for k, v := range r.EgressRules {
+		if oldRules.EgressRules[k] != v {
+			return true
+		}
+	}
+
+	return false
+}
+
+func uniqueSorted(elements []string) []string {
+	t := map[string]bool{}
+	for _, e := range elements {
+		t[e] = true
+	}
+	r := []string{}
+	for k := range t {
+		r = append(r, k)
+	}
+	sort.Strings(r)
+	return r
 }
 
 // Render renders the firewall rules to a string
