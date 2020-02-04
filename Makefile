@@ -1,5 +1,4 @@
-BINARY := firewall-policy-controller
-MAINMODULE := git.f-i-ts.de/cloud-native/firewall-policy-controller/cmd/controller
-COMMONDIR := $(or ${COMMONDIR},../common)
-
-include $(COMMONDIR)/Makefile.inc
+.PHONY: all
+all:
+	go build -trimpath -o bin/firewall-policy-controller cmd/controller/main.go
+	strip bin/firewall-policy-controller

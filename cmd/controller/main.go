@@ -11,8 +11,6 @@ import (
 	"io/ioutil"
 	"os"
 
-	"go.uber.org/zap"
-
 	controller "git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/controller"
 	"git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/droptailer"
 	"git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/watcher"
@@ -34,7 +32,6 @@ const (
 
 var (
 	logger = zapup.MustRootLogger().Sugar()
-	debug  = false
 )
 
 var rootCmd = &cobra.Command{
@@ -42,7 +39,6 @@ var rootCmd = &cobra.Command{
 	Short:   "a service that assembles and enforces firewall rules based on k8s resources",
 	Version: version.V.String(),
 	Run: func(cmd *cobra.Command, args []string) {
-		debug = logger.Desugar().Core().Enabled(zap.DebugLevel)
 		run()
 	},
 }
@@ -103,24 +99,30 @@ func run() {
 	// debounce events and handle fetch
 	d := time.Second * 3
 	t := time.NewTimer(d)
+	var old *controller.FirewallRules
+	var new *controller.FirewallRules
 	for {
 		select {
 		case <-c:
 			t.Reset(d)
 		case <-t.C:
-			rules, err := ctr.FetchAndAssemble()
+			new, err = ctr.FetchAndAssemble()
 			if err != nil {
 				logger.Errorw("could not fetch k8s entities to build firewall rules", "error", err)
 			}
-			logger.Infow("new fw rules to enforce", "ingress", len(rules.IngressRules), "egress", len(rules.EgressRules))
-			for k, i := range rules.IngressRules {
+			if !new.HasChanged(old) {
+				old = new
+				continue
+			}
+			logger.Infow("new fw rules to enforce", "ingress", len(new.IngressRules), "egress", len(new.EgressRules))
+			for k, i := range new.IngressRules {
 				fmt.Printf("%d ingress: %s\n", k+1, i)
 			}
-			for k, e := range rules.EgressRules {
+			for k, e := range new.EgressRules {
 				fmt.Printf("%d egress: %s\n", k+1, e)
 			}
 			if !viper.GetBool("dry-run") {
-				rs, err := rules.Render()
+				rs, err := new.Render()
 				if err != nil {
 					logger.Errorw("error rendering nftables rules", "error", err)
 					continue
