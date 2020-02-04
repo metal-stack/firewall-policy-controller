@@ -43,7 +43,9 @@ var logger *zap.SugaredLogger
 
 func main() {
 	zap, _ := zap.NewProduction()
-	defer zap.Sync() // flushes buffer, if any
+	defer func() {
+		_ = zap.Sync()
+	}()
 	logger = zap.Sugar()
 	if err := rootCmd.Execute(); err != nil {
 		logger.Error("failed executing root command", "error", err)
