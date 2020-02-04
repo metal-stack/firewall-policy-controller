@@ -5,17 +5,17 @@ import (
 	"os/exec"
 	"time"
 
+	"go.uber.org/zap"
 	k8s "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 
 	"io/ioutil"
 	"os"
 
-	controller "git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/controller"
-	"git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/droptailer"
-	"git.f-i-ts.de/cloud-native/firewall-policy-controller/pkg/watcher"
-	"git.f-i-ts.de/cloud-native/metallib/version"
-	"git.f-i-ts.de/cloud-native/metallib/zapup"
+	"github.com/metal-pod/v"
+	controller "github.com/metal-stack/firewall-policy-controller/pkg/controller"
+	"github.com/metal-stack/firewall-policy-controller/pkg/droptailer"
+	"github.com/metal-stack/firewall-policy-controller/pkg/watcher"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -30,20 +30,21 @@ const (
 	systemctlBin    = "/bin/systemctl"
 )
 
-var (
-	logger = zapup.MustRootLogger().Sugar()
-)
-
 var rootCmd = &cobra.Command{
 	Use:     moduleName,
 	Short:   "a service that assembles and enforces firewall rules based on k8s resources",
-	Version: version.V.String(),
+	Version: v.V.String(),
 	Run: func(cmd *cobra.Command, args []string) {
 		run()
 	},
 }
 
+var logger *zap.SugaredLogger
+
 func main() {
+	zap, _ := zap.NewProduction()
+	defer zap.Sync() // flushes buffer, if any
+	logger = zap.Sugar()
 	if err := rootCmd.Execute(); err != nil {
 		logger.Error("failed executing root command", "error", err)
 	}

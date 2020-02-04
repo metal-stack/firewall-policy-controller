@@ -1,11 +1,11 @@
-module git.f-i-ts.de/cloud-native/firewall-policy-controller
+module github.com/metal-stack/firewall-policy-controller
 
-go 1.12
+go 1.13
 
 require (
-	git.f-i-ts.de/cloud-native/metallib v0.0.0-20190117085616-23e5085dca4f
 	github.com/ghodss/yaml v1.0.0
 	github.com/googleapis/gnostic v0.3.1 // indirect
+	github.com/metal-pod/v v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.4.0
