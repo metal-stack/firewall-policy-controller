@@ -23,5 +23,15 @@ bin/$(BINARY): test
 					-X 'github.com/metal-pod/v.GitSHA1=$(SHA)' \
 					-X 'github.com/metal-pod/v.BuildDate=$(BUILDDATE)'" . && strip bin/$(BINARY)
 
+.PHONY: release
+release: bin/$(BINARY)
+	rm -rf rel
+	mkdir -p rel/usr/local/bin
+	cp bin/$(BINARY) rel/usr/local/bin
+	cd rel \
+	&& tar -cvzf $(BINARY).tgz usr/local/bin/$(BINARY) \
+	&& mv $(BINARY).tgz .. \
+	&& cd -
+
 .PHONY: all
-all:: bin/$(BINARY);
+all:: release;
