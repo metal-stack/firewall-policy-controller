@@ -14,6 +14,76 @@ import (
 	testclient "k8s.io/client-go/kubernetes/fake"
 )
 
+func TestHasChanged(t *testing.T) {
+	tt := []struct {
+		name string
+		old  *FirewallRules
+		new  *FirewallRules
+		want bool
+	}{
+		{
+			name: "initialization",
+			old:  nil,
+			new:  &FirewallRules{},
+			want: true,
+		},
+		{
+			name: "empty rule set to empty rule set",
+			old:  &FirewallRules{},
+			new:  &FirewallRules{},
+			want: false,
+		},
+		{
+			name: "changes of rules",
+			old: &FirewallRules{
+				IngressRules: []string{"allow ingress 1"},
+			},
+			new: &FirewallRules{
+				IngressRules: []string{"allow ingress 2"},
+			},
+			want: true,
+		},
+		{
+			name: "equal rules",
+			old: &FirewallRules{
+				IngressRules: []string{"allow ingress 1", "allow ingress 2"},
+			},
+			new: &FirewallRules{
+				IngressRules: []string{"allow ingress 1", "allow ingress 2"},
+			},
+			want: false,
+		},
+		{
+			name: "rule deletion",
+			old: &FirewallRules{
+				IngressRules: []string{"allow ingress 1"},
+			},
+			new: &FirewallRules{
+				IngressRules: []string{},
+			},
+			want: true,
+		},
+		{
+			name: "rule addition",
+			old: &FirewallRules{
+				IngressRules: []string{},
+			},
+			new: &FirewallRules{
+				IngressRules: []string{"allow ingress 1"},
+			},
+			want: true,
+		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			got := tc.new.HasChanged(tc.old)
+			if got != tc.want {
+				t.Errorf("got: %v, wanted: %v, old: %v, new: %v", got, tc.want, tc.old, tc.new)
+			}
+		})
+	}
+}
+
 func TestFetchAndAssembleWithTestData(t *testing.T) {
 	for _, tc := range list("test_data", true) {
 		t.Run(tc, func(t *testing.T) {

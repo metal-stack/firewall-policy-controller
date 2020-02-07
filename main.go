@@ -117,6 +117,7 @@ func run() {
 				old = new
 				continue
 			}
+			old = new
 			logger.Infow("new fw rules to enforce", "ingress", len(new.IngressRules), "egress", len(new.EgressRules))
 			for k, i := range new.IngressRules {
 				fmt.Printf("%d ingress: %s\n", k+1, i)
