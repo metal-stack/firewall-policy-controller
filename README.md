@@ -1,8 +1,6 @@
-# Metal-Firewall
+# Firewall-Policy-Controller
 
-This sould enforce network policies on our firewalls.
-
-This is work in progress and is likely to be merged into the metal-networker.
+This is a small controller to generate nftables rules based on network policies and services.
 
 ## Current scope for the implementation
 - the firewall is not part of the kubernetes cluster
