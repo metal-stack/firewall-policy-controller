@@ -18,10 +18,10 @@ bin/$(BINARY): test
 			-trimpath \
 			-tags netgo \
 			-o bin/$(BINARY) \
-			-ldflags "-X 'github.com/metal-pod/v.Version=$(VERSION)' \
-					-X 'github.com/metal-pod/v.Revision=$(GITVERSION)' \
-					-X 'github.com/metal-pod/v.GitSHA1=$(SHA)' \
-					-X 'github.com/metal-pod/v.BuildDate=$(BUILDDATE)'" . && strip bin/$(BINARY)
+			-ldflags "-X 'github.com/metal-stack/v.Version=$(VERSION)' \
+					-X 'github.com/metal-stack/v.Revision=$(GITVERSION)' \
+					-X 'github.com/metal-stack/v.GitSHA1=$(SHA)' \
+					-X 'github.com/metal-stack/v.BuildDate=$(BUILDDATE)'" . && strip bin/$(BINARY)
 
 .PHONY: release
 release: bin/$(BINARY)

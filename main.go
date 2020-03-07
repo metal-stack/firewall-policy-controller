@@ -12,10 +12,10 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/metal-pod/v"
 	controller "github.com/metal-stack/firewall-policy-controller/pkg/controller"
 	"github.com/metal-stack/firewall-policy-controller/pkg/droptailer"
 	"github.com/metal-stack/firewall-policy-controller/pkg/watcher"
+	"github.com/metal-stack/v"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
