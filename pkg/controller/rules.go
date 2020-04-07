@@ -112,9 +112,6 @@ func ingressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 	if ingress == nil {
 		return nil
 	}
-	if np.ObjectMeta.Namespace != "" {
-		return nil
-	}
 	rules := []string{}
 	for _, i := range ingress {
 		allow := []string{}
