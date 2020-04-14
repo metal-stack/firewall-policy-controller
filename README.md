@@ -7,8 +7,11 @@ This is a small controller to generate nftables rules based on network policies 
 - the firewall is not part of the kubernetes cluster
     => is not visible as node and gets no pods scheduled on it
 - it gets access to the kube-api server with a kubeconfig that gets injected via ignition user data
-- it watches for `NetworkPolicy` objects in the default namespace  and `Service` objects in all namespaces and assembles ingress / egress firewall rules for them
-  - `NetworkPolicy` need an empty `podSelector`
+- it watches for `NetworkPolicy` objects and `Service` objects in all namespaces and assembles ingress / egress firewall rules for them
+  - `NetworkPolicy` need:
+    - an empty `podSelector`
+    - an ipBlock statement with cidr
+    - at least one defined port
   - `Service` objects of type `LoadBalancer` and `NodePort` need the `loadBalancerSourceRanges` attribute
 
 ```yaml
