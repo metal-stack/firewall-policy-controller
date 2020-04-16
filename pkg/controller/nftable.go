@@ -23,6 +23,6 @@ const nftableTemplateIpv4 = `table ip firewall {
 		{{- end }}
 
 		counter comment "count dropped packets"
-		limit rate 2/minute counter packets 1 bytes 40 log prefix "nftables-firewall-dropped: "
+		limit rate 10/second counter packets 1 bytes 40 log prefix "nftables-firewall-dropped: "
 	}
 }`
