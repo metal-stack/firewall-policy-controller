@@ -20,6 +20,6 @@ table ip firewall {
 		ip daddr { 162.159.200.1/32 } udp dport { 123 } counter accept comment "accept traffic for np np-egress-ntp udp"
 
 		counter comment "count dropped packets"
-		limit rate 2/minute counter packets 1 bytes 40 log prefix "nftables-firewall-dropped: "
+		limit rate 10/second counter packets 1 bytes 40 log prefix "nftables-firewall-dropped: "
 	}
 }
