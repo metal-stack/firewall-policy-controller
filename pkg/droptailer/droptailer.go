@@ -78,7 +78,7 @@ func (d *DropTailer) WatchServerIP() {
 			if podIP != "" && d.oldPodIP != podIP {
 				d.logger.Infow("podIP changed, update /etc/hosts", "old", d.oldPodIP, "new", podIP)
 				d.hosts.RemoveHost("droptailer")
-				d.hosts.AddHost(p.Status.PodIP, "droptailer")
+				d.hosts.AddHost(podIP, "droptailer")
 				err := d.hosts.Save()
 				if err != nil {
 					d.logger.Errorw("could not write droptailer hosts entry", "error", err)
