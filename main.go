@@ -93,8 +93,7 @@ func run() {
 	// regularly trigger fetch of k8s resources
 	go func() {
 		t := time.NewTicker(viper.GetDuration("fetch-interval"))
-		for {
-			<-t.C
+		for range t.C {
 			c <- true
 		}
 	}()
