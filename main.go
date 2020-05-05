@@ -42,11 +42,11 @@ var rootCmd = &cobra.Command{
 var logger *zap.SugaredLogger
 
 func main() {
-	zap, _ := zap.NewProduction()
+	log, _ := zap.NewProduction()
 	defer func() {
-		_ = zap.Sync()
+		_ = log.Sync()
 	}()
-	logger = zap.Sugar()
+	logger = log.Sugar()
 	if err := rootCmd.Execute(); err != nil {
 		logger.Error("failed executing root command", "error", err)
 	}
