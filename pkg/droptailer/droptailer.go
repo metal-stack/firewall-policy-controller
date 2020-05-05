@@ -72,6 +72,7 @@ func (d *DropTailer) WatchServerIP() {
 			p, ok := event.Object.(*apiv1.Pod)
 			if !ok {
 				d.logger.Error("unexpected type")
+				continue
 			}
 			podIP := p.Status.PodIP
 			if podIP != "" && d.oldPodIP != podIP {
@@ -102,6 +103,7 @@ func (d *DropTailer) WatchClientSecret() {
 			secret, ok := event.Object.(*apiv1.Secret)
 			if !ok {
 				d.logger.Error("unexpected type")
+				continue
 			}
 			if secret.GetName() != secretName {
 				continue
