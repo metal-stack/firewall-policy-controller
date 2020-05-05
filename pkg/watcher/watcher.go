@@ -35,7 +35,7 @@ func NewServiceWatcher(logger *zap.SugaredLogger, client k8s.Interface) *Service
 }
 
 // Watch watches for k8s service entities and informs the res chan; is blocking.
-func (w *ServiceWatcher) Watch(res chan bool) {
+func (w *ServiceWatcher) Watch(res chan<- bool) {
 	for {
 		opts := metav1.ListOptions{}
 		watcher, err := w.client.CoreV1().Services(metav1.NamespaceAll).Watch(opts)
@@ -62,7 +62,7 @@ func NewNetworkPolicyWatcher(logger *zap.SugaredLogger, client k8s.Interface) *N
 }
 
 // Watch watches for k8s network policy entities and informs the res chan; is blocking.
-func (w *NetworkPolicyWatcher) Watch(res chan bool) {
+func (w *NetworkPolicyWatcher) Watch(res chan<- bool) {
 	for {
 		opts := metav1.ListOptions{}
 		watcher, err := w.client.NetworkingV1().NetworkPolicies(metav1.NamespaceAll).Watch(opts)
