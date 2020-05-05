@@ -29,7 +29,6 @@ type DropTailer struct {
 	client          k8s.Interface
 	logger          *zap.SugaredLogger
 	podname         string
-	namespace       string
 	hosts           *txeh.Hosts
 	oldPodIP        string
 	certificateBase string
@@ -49,7 +48,6 @@ func NewDropTailer(logger *zap.SugaredLogger, client k8s.Interface) (*DropTailer
 		client:          client,
 		logger:          logger,
 		podname:         "droptailer",
-		namespace:       namespace,
 		hosts:           hosts,
 		certificateBase: certificateBase,
 	}, nil
@@ -62,7 +60,7 @@ func (d *DropTailer) WatchServerIP() {
 		LabelSelector: labels.SelectorFromSet(labelMap).String(),
 	}
 	for {
-		watcher, err := d.client.CoreV1().Pods(d.namespace).Watch(opts)
+		watcher, err := d.client.CoreV1().Pods(namespace).Watch(opts)
 		if err != nil {
 			d.logger.Errorw("could not watch for pods", "error", err)
 			time.Sleep(10 * time.Second)
@@ -93,7 +91,7 @@ func (d *DropTailer) WatchServerIP() {
 func (d *DropTailer) WatchClientSecret() {
 	keys := []string{secretKeyCaCertificate, secretKeyCertificate, secretKeyCertificateKey}
 	for {
-		s, err := d.client.CoreV1().Secrets(d.namespace).Watch(metav1.ListOptions{})
+		s, err := d.client.CoreV1().Secrets(namespace).Watch(metav1.ListOptions{})
 		if err != nil {
 			d.logger.Errorw("could not watch for pods droptailer-client secret", "error", err)
 			time.Sleep(10 * time.Second)
