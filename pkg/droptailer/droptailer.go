@@ -80,6 +80,7 @@ func (d *DropTailer) WatchServerIP() {
 				err := d.hosts.Save()
 				if err != nil {
 					d.logger.Errorw("could not write droptailer hosts entry", "error", err)
+					continue
 				}
 				d.oldPodIP = podIP
 			}
