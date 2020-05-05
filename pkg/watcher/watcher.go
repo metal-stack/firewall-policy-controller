@@ -15,22 +15,16 @@ type Watcher struct {
 }
 
 // ServiceWatcher watches for changes of k8s service entities.
-type ServiceWatcher struct {
-	Watcher
-}
+type ServiceWatcher Watcher
 
 // NetworkPolicyWatcher watches for changes of k8s network policy entities.
-type NetworkPolicyWatcher struct {
-	Watcher
-}
+type NetworkPolicyWatcher Watcher
 
 // NewServiceWatcher creates a new ServiceWatcher
 func NewServiceWatcher(logger *zap.SugaredLogger, client k8s.Interface) *ServiceWatcher {
 	return &ServiceWatcher{
-		Watcher: Watcher{
-			client: client,
-			logger: logger,
-		},
+		client: client,
+		logger: logger,
 	}
 }
 
@@ -54,10 +48,8 @@ func (w *ServiceWatcher) Watch(res chan<- bool) {
 // NewNetworkPolicyWatcher creates a new NetworkPolicyWatcher
 func NewNetworkPolicyWatcher(logger *zap.SugaredLogger, client k8s.Interface) *NetworkPolicyWatcher {
 	return &NetworkPolicyWatcher{
-		Watcher: Watcher{
-			client: client,
-			logger: logger,
-		},
+		client: client,
+		logger: logger,
 	}
 }
 
