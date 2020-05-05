@@ -13,8 +13,8 @@ import (
 
 // FirewallResources holds the k8s entities that serve as input for the generation of firewall rules.
 type FirewallResources struct {
-	NetworkPolicyList *networkingv1.NetworkPolicyList
-	ServiceList       *corev1.ServiceList
+	*networkingv1.NetworkPolicyList
+	*corev1.ServiceList
 }
 
 // FirewallRules hold the nftable rules that are generated from k8s entities.
