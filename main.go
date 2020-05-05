@@ -106,6 +106,9 @@ func run() {
 	for {
 		select {
 		case <-c:
+			if !t.Stop() {
+				<-t.C
+			}
 			t.Reset(d)
 		case <-t.C:
 			new, err = ctr.FetchAndAssemble()
