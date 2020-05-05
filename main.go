@@ -54,11 +54,11 @@ func main() {
 
 func init() {
 	viper.SetEnvPrefix("firewall")
-	homedir, err := homedir.Dir()
+	homeDir, err := homedir.Dir()
 	if err != nil {
 		logger.Fatal(err)
 	}
-	rootCmd.PersistentFlags().StringP("kubecfg", "k", homedir+"/.kube/config", "kubecfg path to the cluster to account")
+	rootCmd.PersistentFlags().StringP("kubecfg", "k", homeDir+"/.kube/config", "kubecfg path to the cluster to account")
 	rootCmd.PersistentFlags().Bool("dry-run", false, "just print the rules that would be enforced without applying them")
 	rootCmd.PersistentFlags().Duration("fetch-interval", 10*time.Second, "interval for reassembling firewall rules")
 	viper.AutomaticEnv()
