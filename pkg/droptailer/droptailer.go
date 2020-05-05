@@ -93,7 +93,7 @@ func (d *DropTailer) WatchServerIP() {
 func (d *DropTailer) WatchClientSecret() {
 	keys := []string{secretKeyCaCertificate, secretKeyCertificate, secretKeyCertificateKey}
 	for {
-		s, err := d.client.CoreV1().Secrets(namespace).Watch(metav1.ListOptions{})
+		s, err := d.client.CoreV1().Secrets(d.namespace).Watch(metav1.ListOptions{})
 		if err != nil {
 			d.logger.Errorw("could not watch for pods droptailer-client secret", "error", err)
 			time.Sleep(10 * time.Second)
