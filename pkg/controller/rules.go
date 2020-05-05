@@ -115,23 +115,21 @@ func ingressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 	if np.ObjectMeta.Namespace != "" {
 		return nil
 	}
-	rules := []string{}
+	var rules []string
 	for _, i := range ingress {
-		allow := []string{}
-		except := []string{}
+		var allow, except []string
 		for _, f := range i.From {
 			allow = append(allow, f.IPBlock.CIDR)
 			except = append(except, f.IPBlock.Except...)
 		}
-		common := []string{}
+		var common []string
 		if len(except) > 0 {
 			common = append(common, fmt.Sprintf("ip saddr != { %s }", strings.Join(except, ", ")))
 		}
 		if len(allow) > 0 {
 			common = append(common, fmt.Sprintf("ip saddr { %s }", strings.Join(allow, ", ")))
 		}
-		tcpPorts := []string{}
-		udpPorts := []string{}
+		var tcpPorts, udpPorts []string
 		for _, p := range i.Ports {
 			proto := proto(p.Protocol)
 			if proto == "tcp" {
@@ -155,16 +153,16 @@ func ingressRulesForService(svc corev1.Service) []string {
 	if svc.Spec.Type != corev1.ServiceTypeLoadBalancer && svc.Spec.Type != corev1.ServiceTypeNodePort {
 		return nil
 	}
-	allow := []string{}
+	var allow []string
 	if len(svc.Spec.LoadBalancerSourceRanges) == 0 {
 		allow = append(allow, "0.0.0.0/0")
 	}
 	allow = append(allow, svc.Spec.LoadBalancerSourceRanges...)
-	common := []string{}
+	var common []string
 	if len(allow) > 0 {
 		common = append(common, fmt.Sprintf("ip saddr { %s }", strings.Join(allow, ", ")))
 	}
-	ips := []string{}
+	var ips []string
 	if svc.Spec.LoadBalancerIP != "" {
 		ips = append(ips, svc.Spec.LoadBalancerIP)
 	}
@@ -172,8 +170,7 @@ func ingressRulesForService(svc corev1.Service) []string {
 		ips = append(ips, e.IP)
 	}
 	common = append(common, fmt.Sprintf("ip daddr { %s }", strings.Join(ips, ", ")))
-	tcpPorts := []string{}
-	udpPorts := []string{}
+	var tcpPorts, udpPorts []string
 	for _, p := range svc.Spec.Ports {
 		proto := proto(&p.Protocol)
 		if proto == "tcp" {
@@ -183,7 +180,7 @@ func ingressRulesForService(svc corev1.Service) []string {
 		}
 	}
 	comment := fmt.Sprintf("accept traffic for k8s service %s/%s", svc.ObjectMeta.Namespace, svc.ObjectMeta.Name)
-	rules := []string{}
+	var rules []string
 	if len(tcpPorts) > 0 {
 		rules = append(rules, assembleDestinationPortRule(common, "tcp", tcpPorts, comment))
 	}
@@ -198,10 +195,9 @@ func egressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 	if egress == nil {
 		return nil
 	}
-	rules := []string{}
+	var rules []string
 	for _, e := range egress {
-		tcpPorts := []string{}
-		udpPorts := []string{}
+		var tcpPorts, udpPorts []string
 		for _, p := range e.Ports {
 			proto := proto(p.Protocol)
 			if proto == "tcp" {
@@ -210,8 +206,7 @@ func egressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 				udpPorts = append(udpPorts, fmt.Sprint(p.Port))
 			}
 		}
-		allow := []string{}
-		except := []string{}
+		var allow, except []string
 		for _, t := range e.To {
 			if t.IPBlock == nil {
 				continue
@@ -219,7 +214,7 @@ func egressRulesForNetworkPolicy(np networkingv1.NetworkPolicy) []string {
 			allow = append(allow, t.IPBlock.CIDR)
 			except = append(except, t.IPBlock.Except...)
 		}
-		common := []string{}
+		var common []string
 		if len(except) > 0 {
 			common = append(common, fmt.Sprintf("ip daddr != { %s }", strings.Join(except, ", ")))
 		}
