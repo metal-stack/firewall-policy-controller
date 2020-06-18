@@ -1,5 +1,7 @@
 # Firewall-Policy-Controller
 
+***DEPRECATED*** and replaced by [firewall-controller](https://github.com/metal-stack/firewall-controller)
+
 This is a small controller to generate nftables rules based on network policies and services.
 
 ## Current scope for the implementation
